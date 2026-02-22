@@ -1,0 +1,588 @@
+{
+  "icons": [
+    {
+      "name": "home_outline",
+      "file": "ic_home_outline.png",
+      "source": "menu",
+      "position": [
+        100,
+        180,
+        120,
+        120
+      ]
+    },
+    {
+      "name": "bell_outline",
+      "file": "ic_bell_outline.png",
+      "source": "menu",
+      "position": [
+        100,
+        220,
+        120,
+        120
+      ]
+    },
+    {
+      "name": "person_outline",
+      "file": "ic_person_outline.png",
+      "source": "menu",
+      "position": [
+        100,
+        260,
+        120,
+        120
+      ]
+    },
+    {
+      "name": "close_outline",
+      "file": "ic_close_outline.png",
+      "source": "menu",
+      "position": [
+        100,
+        300,
+        120,
+        120
+      ]
+    },
+    {
+      "name": "wallet_filled",
+      "file": "ic_wallet_filled.png",
+      "source": "menu",
+      "position": [
+        100,
+        400,
+        120,
+        120
+      ]
+    },
+    {
+      "name": "budget",
+      "file": "ic_budget.png",
+      "source": "menu",
+      "position": [
+        150,
+        550,
+        100,
+        100
+      ]
+    },
+    {
+      "name": "insurance_umbrella",
+      "file": "ic_insurance_umbrella.png",
+      "source": "menu",
+      "position": [
+        150,
+        650,
+        100,
+        100
+      ]
+    },
+    {
+      "name": "security_shield",
+      "file": "ic_security_shield.png",
+      "source": "menu",
+      "position": [
+        150,
+        750,
+        100,
+        100
+      ]
+    },
+    {
+      "name": "transfer",
+      "file": "ic_transfer.png",
+      "source": "menu",
+      "position": [
+        150,
+        900,
+        100,
+        100
+      ]
+    },
+    {
+      "name": "bank_card",
+      "file": "ic_bank_card.png",
+      "source": "menu",
+      "position": [
+        150,
+        1000,
+        100,
+        100
+      ]
+    },
+    {
+      "name": "wealth",
+      "file": "ic_wealth.png",
+      "source": "menu",
+      "position": [
+        150,
+        1100,
+        100,
+        100
+      ]
+    },
+    {
+      "name": "wellness_trophy",
+      "file": "ic_wellness_trophy.png",
+      "source": "menu",
+      "position": [
+        200,
+        1300,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "tasks_checklist",
+      "file": "ic_tasks_checklist.png",
+      "source": "menu",
+      "position": [
+        200,
+        1400,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "device_management",
+      "file": "ic_device_management.png",
+      "source": "menu",
+      "position": [
+        200,
+        1600,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "security_settings",
+      "file": "ic_security_settings.png",
+      "source": "menu",
+      "position": [
+        200,
+        1700,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "usage_history",
+      "file": "ic_usage_history.png",
+      "source": "menu",
+      "position": [
+        200,
+        1800,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "anti_fraud",
+      "file": "ic_anti_fraud.png",
+      "source": "menu",
+      "position": [
+        200,
+        1950,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "fx_currency",
+      "file": "ic_fx_currency.png",
+      "source": "menu",
+      "position": [
+        250,
+        2200,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "travel_insurance",
+      "file": "ic_travel_insurance.png",
+      "source": "menu",
+      "position": [
+        250,
+        2300,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "future_planner_flag",
+      "file": "ic_future_planner_flag.png",
+      "source": "menu",
+      "position": [
+        200,
+        2600,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "insurance_product",
+      "file": "ic_insurance_product.png",
+      "source": "menu",
+      "position": [
+        200,
+        2700,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "mpf_chart",
+      "file": "ic_mpf_chart.png",
+      "source": "menu",
+      "position": [
+        200,
+        2800,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "wallet_card",
+      "file": "ic_wallet_card.png",
+      "source": "menu",
+      "position": [
+        250,
+        3100,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "loan_hand",
+      "file": "ic_loan_hand.png",
+      "source": "menu",
+      "position": [
+        250,
+        3250,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "faq_question",
+      "file": "ic_faq_question.png",
+      "source": "menu",
+      "position": [
+        200,
+        3550,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "contact_chat",
+      "file": "ic_contact_chat.png",
+      "source": "menu",
+      "position": [
+        200,
+        3650,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "info_locked",
+      "file": "ic_info_locked.png",
+      "source": "menu",
+      "position": [
+        200,
+        3750,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "online_chat",
+      "file": "ic_online_chat.png",
+      "source": "menu",
+      "position": [
+        200,
+        3900,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "logout",
+      "file": "ic_logout.png",
+      "source": "menu",
+      "position": [
+        100,
+        4100,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "transfer_local",
+      "file": "ic_transfer_local.png",
+      "source": "home",
+      "position": [
+        50,
+        200,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "transfer_hsbc",
+      "file": "ic_transfer_hsbc.png",
+      "source": "home",
+      "position": [
+        50,
+        300,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "deposit",
+      "file": "ic_deposit.png",
+      "source": "home",
+      "position": [
+        50,
+        400,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "edit",
+      "file": "ic_edit.png",
+      "source": "home",
+      "position": [
+        50,
+        500,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "visibility",
+      "file": "ic_visibility.png",
+      "source": "home",
+      "position": [
+        50,
+        600,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "bank",
+      "file": "ic_bank.png",
+      "source": "home",
+      "position": [
+        50,
+        700,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "add_circle",
+      "file": "ic_add_circle.png",
+      "source": "home",
+      "position": [
+        50,
+        800,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "trending_up",
+      "file": "ic_trending_up.png",
+      "source": "home",
+      "position": [
+        50,
+        900,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "rewards",
+      "file": "ic_rewards.png",
+      "source": "home",
+      "position": [
+        50,
+        1000,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "hexagon",
+      "file": "ic_hexagon.png",
+      "source": "home",
+      "position": [
+        50,
+        1100,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "arrow_forward",
+      "file": "ic_arrow_forward.png",
+      "source": "home",
+      "position": [
+        50,
+        1200,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "chat",
+      "file": "ic_chat.png",
+      "source": "home",
+      "position": [
+        50,
+        1300,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "mic",
+      "file": "ic_mic.png",
+      "source": "home",
+      "position": [
+        50,
+        1400,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "expand_more",
+      "file": "ic_expand_more.png",
+      "source": "wealth",
+      "position": [
+        50,
+        200,
+        50,
+        50
+      ]
+    },
+    {
+      "name": "info",
+      "file": "ic_info.png",
+      "source": "wealth",
+      "position": [
+        50,
+        300,
+        50,
+        50
+      ]
+    },
+    {
+      "name": "ipo_flag",
+      "file": "ic_ipo_flag.png",
+      "source": "wealth",
+      "position": [
+        50,
+        400,
+        50,
+        50
+      ]
+    },
+    {
+      "name": "currency_exchange",
+      "file": "ic_currency_exchange.png",
+      "source": "wealth",
+      "position": [
+        50,
+        500,
+        50,
+        50
+      ]
+    },
+    {
+      "name": "pie_chart",
+      "file": "ic_pie_chart.png",
+      "source": "wealth",
+      "position": [
+        50,
+        600,
+        50,
+        50
+      ]
+    },
+    {
+      "name": "fund",
+      "file": "ic_fund.png",
+      "source": "wealth",
+      "position": [
+        50,
+        700,
+        50,
+        50
+      ]
+    },
+    {
+      "name": "bond",
+      "file": "ic_bond.png",
+      "source": "wealth",
+      "position": [
+        50,
+        800,
+        50,
+        50
+      ]
+    },
+    {
+      "name": "puzzle",
+      "file": "ic_puzzle.png",
+      "source": "wealth",
+      "position": [
+        50,
+        900,
+        50,
+        50
+      ]
+    },
+    {
+      "name": "percent",
+      "file": "ic_percent.png",
+      "source": "wealth",
+      "position": [
+        50,
+        1000,
+        50,
+        50
+      ]
+    },
+    {
+      "name": "loan",
+      "file": "ic_loan.png",
+      "source": "wealth",
+      "position": [
+        50,
+        1100,
+        50,
+        50
+      ]
+    },
+    {
+      "name": "umbrella",
+      "file": "ic_umbrella.png",
+      "source": "wealth",
+      "position": [
+        50,
+        1200,
+        50,
+        50
+      ]
+    }
+  ],
+  "total": 53
+}

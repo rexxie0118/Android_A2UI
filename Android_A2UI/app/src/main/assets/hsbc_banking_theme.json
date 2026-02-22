@@ -1,0 +1,331 @@
+{
+  "name": "hsbc_banking",
+  "description": "HSBC Mobile Banking UI Theme - Based on actual HSBC app design",
+  
+  "colors": {
+    "primary": "#DA0011",
+    "primaryDark": "#A7000D",
+    "primaryLight": "#BA1110",
+    
+    "secondary": "#1B6D85",
+    "secondaryDark": "#245269",
+    "secondaryLight": "#5BC0DE",
+    
+    "accent": "#269ABC",
+    
+    "background": "#FFFFFF",
+    "surface": "#F2F2F2",
+    "cardBackground": "#FFFFFF",
+    "error": "#A94442",
+    
+    "onPrimary": "#FFFFFF",
+    "onSecondary": "#FFFFFF",
+    "onBackground": "#000000",
+    "onSurface": "#333333",
+    "onError": "#FFFFFF",
+    
+    "textPrimary": "#000000",
+    "textSecondary": "#666666",
+    "textDisabled": "#9B9B9B",
+    "textHint": "#999999",
+    
+    "divider": "#E6E6E6",
+    "border": "#D2D2D2",
+    
+    "success": "#449D44",
+    "warning": "#FF9800",
+    "info": "#31B0D5",
+    
+    "balancePositive": "#449D44",
+    "balanceNegative": "#A94442",
+    "accountCardBorder": "#E6E6E6"
+  },
+  
+  "typography": {
+    "fontFamily": "sans-serif",
+    "fontFamilyMedium": "sans-serif-medium",
+    "fontFamilyBold": "sans-serif",
+    
+    "displaySize": 32,
+    "displayWeight": 400,
+    
+    "h1Size": 36,
+    "h1Weight": 300,
+    
+    "h2Size": 28,
+    "h2Weight": 300,
+    
+    "h3Size": 24,
+    "h3Weight": 400,
+    
+    "h4Size": 20,
+    "h4Weight": 400,
+    
+    "h5Size": 18,
+    "h5Weight": 500,
+    
+    "h6Size": 18,
+    "h6Weight": 500,
+    
+    "subtitle1Size": 16,
+    "subtitle1Weight": 400,
+    
+    "subtitle2Size": 14,
+    "subtitle2Weight": 500,
+    
+    "body1Size": 16,
+    "body1Weight": 400,
+    
+    "body2Size": 14,
+    "body2Weight": 400,
+    
+    "balanceSize": 24,
+    "balanceWeight": 500,
+    
+    "accountNameSize": 16,
+    "accountNameWeight": 500,
+    
+    "accountNumberSize": 14,
+    "accountNumberWeight": 400,
+    
+    "buttonSize": 16,
+    "buttonWeight": 500,
+    
+    "captionSize": 12,
+    "captionWeight": 400,
+    
+    "overlineSize": 12,
+    "overlineWeight": 400,
+    
+    "lineHeightMultiplier": 1.42857
+  },
+  
+  "spacing": {
+    "baseUnit": 4,
+    "small": 8,
+    "medium": 12,
+    "large": 16,
+    "xlarge": 24,
+    "xxlarge": 32,
+    
+    "buttonPaddingVertical": 10,
+    "buttonPaddingHorizontal": 20,
+    
+    "cardPadding": 16,
+    "inputPadding": 12,
+    "sectionPadding": 16,
+    
+    "accountCardPadding": 16,
+    "balancePadding": 12,
+    "actionButtonSpacing": 16
+  },
+  
+  "components": {
+    "button": {
+      "cornerRadius": 24,
+      "elevation": 0,
+      "minHeight": 48,
+      "minWidth": 64,
+      
+      "primaryBackground": "#DA0011",
+      "primaryText": "#FFFFFF",
+      "primaryBorder": "#DA0011",
+      
+      "secondaryBackground": "transparent",
+      "secondaryText": "#000000",
+      "secondaryBorder": "#000000",
+      
+      "borderlessBackground": "transparent",
+      "borderlessText": "#000000",
+      
+      "iconButtonSize": 56
+    },
+    
+    "textField": {
+      "cornerRadius": 24,
+      "borderWidth": 1,
+      "padding": 12,
+      "hintColor": "#999999",
+      "textColor": "#000000",
+      "backgroundColor": "#FFFFFF",
+      "borderColor": "#D2D2D2",
+      "focusColor": "#DA0011",
+      "errorColor": "#A94442"
+    },
+    
+    "checkbox": {
+      "checkedColor": "#DA0011",
+      "uncheckedColor": "#D2D2D2",
+      "checkColor": "#FFFFFF",
+      "textColor": "#000000"
+    },
+    
+    "choicePicker": {
+      "cornerRadius": 0,
+      "borderWidth": 1,
+      "borderColor": "#D2D2D2",
+      "backgroundColor": "#FFFFFF",
+      "textColor": "#000000",
+      "selectedColor": "#DA0011",
+      "selectedTextColor": "#FFFFFF"
+    },
+    
+    "card": {
+      "cornerRadius": 0,
+      "elevation": 0,
+      "backgroundColor": "#FFFFFF",
+      "padding": 16,
+      "borderWidth": 0,
+      "borderColor": "#E6E6E6"
+    },
+    
+    "accountCard": {
+      "cornerRadius": 0,
+      "elevation": 0,
+      "backgroundColor": "#FFFFFF",
+      "padding": 16,
+      "borderWidth": 0,
+      "borderColor": "#E6E6E6",
+      "selectedBorderColor": "#DA0011",
+      "selectedBackgroundColor": "#FFFFFF"
+    },
+    
+    "appBar": {
+      "backgroundColor": "#FFFFFF",
+      "textColor": "#000000",
+      "elevation": 0,
+      "height": 56
+    },
+    
+    "navigationBar": {
+      "backgroundColor": "#FFFFFF",
+      "iconColor": "#666666",
+      "selectedIconColor": "#DA0011",
+      "selectedTextColor": "#DA0011",
+      "unselectedTextColor": "#666666",
+      "height": 56,
+      "elevation": 8
+    },
+    
+    "progressBar": {
+      "trackColor": "#F2F2F2",
+      "progressColor": "#DA0011",
+      "indeterminateColor": "#DA0011",
+      "cornerRadius": 0,
+      "height": 4
+    },
+    
+    "slider": {
+      "trackColor": "#F2F2F2",
+      "progressColor": "#DA0011",
+      "thumbColor": "#DA0011",
+      "cornerRadius": 0,
+      "trackHeight": 4,
+      "thumbRadius": 8
+    },
+    
+    "image": {
+      "cornerRadius": 0,
+      "backgroundColor": null,
+      "tintColor": null
+    },
+    
+    "icon": {
+      "tintColor": "#000000",
+      "size": 24
+    },
+    
+    "video": {
+      "cornerRadius": 0,
+      "backgroundColor": "#F2F2F2",
+      "controlsColor": null
+    },
+    
+    "balanceDisplay": {
+      "textColor": "#000000",
+      "currencySize": 14,
+      "amountSize": 24,
+      "positiveColor": "#449D44",
+      "negativeColor": "#A94442"
+    },
+    
+    "actionButton": {
+      "cornerRadius": 0,
+      "size": 72,
+      "iconSize": 32,
+      "labelSize": 12,
+      "backgroundColor": "#FFFFFF",
+      "iconColor": "#DA0011",
+      "labelColor": "#000000",
+      "elevation": 0
+    },
+    
+    "quickActionCircle": {
+      "cornerRadius": 36,
+      "size": 72,
+      "iconSize": 32,
+      "backgroundColor": "#FFFFFF",
+      "iconColor": "#DA0011",
+      "labelColor": "#000000",
+      "elevation": 0
+    }
+  },
+  
+  "elevation": {
+    "level0": 0,
+    "level1": 0,
+    "level2": 2,
+    "level3": 4,
+    "level4": 6,
+    "level5": 8
+  },
+  
+  "shapes": {
+    "circleButton": {
+      "cornerRadius": 36
+    },
+    "card": {
+      "cornerRadius": 0
+    },
+    "button": {
+      "cornerRadius": 24
+    }
+  },
+  
+  "animation": {
+    "durationShort": 150,
+    "durationMedium": 300,
+    "durationLong": 450,
+    "interpolator": "accelerate_decelerate"
+  }
+}
+  },
+  
+  "elevation": {
+    "level0": 0,
+    "level1": 0,
+    "level2": 2,
+    "level3": 4,
+    "level4": 6,
+    "level5": 8
+  },
+  
+  "shapes": {
+    "circleButton": {
+      "cornerRadius": 36
+    },
+    "card": {
+      "cornerRadius": 0
+    },
+    "button": {
+      "cornerRadius": 3
+    }
+  },
+  
+  "animation": {
+    "durationShort": 150,
+    "durationMedium": 300,
+    "durationLong": 450,
+    "interpolator": "accelerate_decelerate"
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "name": "hsbc_banking",
+  "description": "HSBC Mobile Banking Navigation Configuration",
+  
+  "pages": {
+    "home": {
+      "configFile": "hsbc_home.a2ui.jsonl",
+      "title": "首页",
+      "navTab": "home"
+    },
+    "transfer": {
+      "configFile": "transfer_page.a2ui.jsonl",
+      "title": "转账",
+      "navTab": "transfer"
+    },
+    "cards": {
+      "configFile": "cards_page.a2ui.jsonl",
+      "title": "银行卡",
+      "navTab": "cards"
+    },
+    "wealth": {
+      "configFile": "wealth_page.a2ui.jsonl",
+      "title": "财富",
+      "navTab": "wealth"
+    },
+    "insurance": {
+      "configFile": "insurance_page.a2ui.jsonl",
+      "title": "保险",
+      "navTab": "insurance"
+    }
+  },
+  
+  "navigation": {
+    "defaultPage": "home",
+    "tabs": [
+      {
+        "id": "home",
+        "icon": "home",
+        "label": "首页",
+        "action": "navigate_home"
+      },
+      {
+        "id": "transfer",
+        "icon": "swap_horiz",
+        "label": "转账",
+        "action": "navigate_transfer"
+      },
+      {
+        "id": "cards",
+        "icon": "credit_card",
+        "label": "银行卡",
+        "action": "navigate_cards"
+      },
+      {
+        "id": "wealth",
+        "icon": "trending_up",
+        "label": "财富",
+        "action": "navigate_wealth"
+      },
+      {
+        "id": "insurance",
+        "icon": "shield",
+        "label": "保险",
+        "action": "navigate_insurance"
+      }
+    ],
+    "selectedColor": "#DA0011",
+    "unselectedColor": "#666666",
+    "underlineHeight": 2
+  },
+  
+  "events": {
+    "onNavigate": {
+      "type": "navigation",
+      "handler": "handlePageNavigation",
+      "params": ["page"]
+    },
+    "onTransfer": {
+      "type": "action",
+      "handler": "openTransferPage"
+    },
+    "onPay": {
+      "type": "action",
+      "handler": "openPayPage"
+    },
+    "onTopup": {
+      "type": "action",
+      "handler": "openTopupPage"
+    },
+    "onAccountSelected": {
+      "type": "action",
+      "handler": "openAccountDetails",
+      "params": ["accountId"]
+    },
+    "onCashFlow": {
+      "type": "action",
+      "handler": "openCashFlowDetails"
+    },
+    "onInvestment": {
+      "type": "action",
+      "handler": "openInvestmentDetails"
+    },
+    "onRewards": {
+      "type": "action",
+      "handler": "openRewardsPage"
+    },
+    "onProductSelect": {
+      "type": "action",
+      "handler": "openProductDetails",
+      "params": ["product"]
+    },
+    "onTabSelect": {
+      "type": "action",
+      "handler": "switchTab",
+      "params": ["tab"]
+    }
+  },
+  
+  "dataModel": {
+    "nav": {
+      "currentPage": "home",
+      "selectedColor": "#DA0011",
+      "unselectedColor": "#666666"
+    },
+    "tabs": {
+      "overview": true,
+      "wealthVision": false
+    },
+    "accounts": {
+      "main": {
+        "balance": "2179.86",
+        "currency": "HKD"
+      },
+      "sub": [
+        {"name": "港元往来", "balance": "100.00", "currency": "HKD"},
+        {"name": "港元储蓄", "balance": "2079.86", "currency": "HKD"},
+        {"name": "澳元储蓄", "balance": "0.00", "currency": "AUD"}
+      ]
+    },
+    "wealth": {
+      "totalValue": "0.00",
+      "currency": "HKD",
+      "unrealizedPL": "0.00",
+      "realizedPL": "0.00"
+    }
+  },
+  
+  "theming": {
+    "activeTabUnderline": true,
+    "activeTabColor": "#DA0011",
+    "navBarStyle": "text_only",
+    "showNavIcons": false,
+    "tabIndicatorWeight": 2
+  }
+}
