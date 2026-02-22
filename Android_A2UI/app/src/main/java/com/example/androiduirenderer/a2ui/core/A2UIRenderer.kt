@@ -4,97 +4,197 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.SeekBar
+import android.widget.Spinner
+import android.widget.TextView
 import com.example.androiduirenderer.a2ui.model.*
 
+/**
+ * A2UI Renderer following the v0.8 specification
+ * 
+ * Rendering Pipeline:
+ * 1. Parse JSONL Stream
+ * 2. Dispatch Messages (surfaceUpdate, dataModelUpdate, etc.)
+ * 3. Buffer Components & Data (NO RENDERING YET)
+ * 4. Receive beginRendering
+ * 5. Build Widget Tree (lookup components in registry)
+ * 6. Resolve Data Bindings (literal* vs path logic)
+ * 7. Render Native Widgets
+ * 8. Handle User Actions
+ */
 class A2UIRenderer(private val context: Context) {
-    private var onNavigateListener: ((page: String) -> Unit)? = null
+    private val surfaces = mutableMapOf<String, SurfaceState>()
+    private var onNavigateListener: ((surfaceId: String) -> Unit)? = null
+    private var onActionListener: ((action: Action, context: Map<String, Any?>) -> Unit)? = null
 
-    // Store binding metadata for each component
-    private val componentBindings = mutableMapOf<String, ViewBinding>()
+    // Runtime view tracking
     private val componentViews = mutableMapOf<String, View>()
+    private val viewBindings = mutableMapOf<View, ViewBinding>()
 
-    fun setOnNavigateListener(listener: (page: String) -> Unit) {
+    fun setOnNavigateListener(listener: (surfaceId: String) -> Unit) {
         onNavigateListener = listener
     }
 
-    /**
-     * Render a surface following A2UI practice:
-     * STEP 1: Build widget tree from component definitions
-     * STEP 2: Resolve data bindings
-     * STEP 3: Components are already registered in ComponentCatalog (used during tree building)
-     */
-    fun renderSurface(components: List<A2UIComponent>, container: ViewGroup, theme: Theme? = null) {
-        Log.d("A2UIRenderer", "Rendering ${components.size} components with theme ${theme?.name ?: "default"}")
-        A2UIComponents.currentTheme = theme
-
-        // Clear previous state
-        container.removeAllViews()
-        componentBindings.clear()
-        componentViews.clear()
-
-        // Build component map (mutable for template expansion)
-        val componentMap = components.associateBy { it.id }.toMutableMap()
-
-        // Find root component (must have id "root")
-        val rootComponent = componentMap["root"]
-            ?: throw IllegalArgumentException("No root component found")
-
-        // STEP 1: Build widget tree - create all views and store binding metadata
-        Log.d("A2UIRenderer", "STEP 1: Building widget tree")
-        val rootBinding = buildWidgetTree(rootComponent, componentMap, container)
-        componentBindings[rootComponent.id] = rootBinding
-        componentViews[rootComponent.id] = rootBinding.view
-
-        // Expand templates and build child relationships
-        buildComponentTree(rootComponent, componentMap, rootBinding.view as? ViewGroup ?: container)
-
-        // STEP 2: Resolve data bindings - separate pass after tree is built
-        Log.d("A2UIRenderer", "STEP 2: Resolving data bindings")
-        for (binding in componentBindings.values) {
-            A2UIComponents.bindData(binding)
-        }
-
-        // STEP 3: Widget registry lookup already happened during tree building via ComponentCatalog
-        Log.d("A2UIRenderer", "STEP 3: Widget registry lookup complete (done during tree building)")
-
-        // Add root view to container
-        container.addView(rootBinding.view)
+    fun setOnActionListener(listener: (action: Action, context: Map<String, Any?>) -> Unit) {
+        onActionListener = listener
     }
 
+    /**
+     * Process an A2UI message - buffer updates, don't render yet
+     */
+    fun processMessage(response: A2UIResponse) {
+        response.surfaceUpdate?.let { surfaceUpdate ->
+            handleSurfaceUpdate(surfaceUpdate)
+        }
+
+        response.dataModelUpdate?.let { dataModelUpdate ->
+            handleDataModelUpdate(dataModelUpdate)
+        }
+
+        response.deleteSurface?.let { deleteSurface ->
+            handleDeleteSurface(deleteSurface)
+        }
+
+        response.beginRendering?.let { beginRendering ->
+            // Progressive rendering: only render when beginRendering arrives
+            // Container will be provided when actually rendering
+        }
+    }
+
+    private fun handleSurfaceUpdate(update: A2UIMessage.SurfaceUpdate) {
+        Log.d("A2UIRenderer", "Buffering surfaceUpdate for ${update.surfaceId}: ${update.components.size} components")
+        
+        val surface = surfaces.getOrPut(update.surfaceId) {
+            SurfaceState(
+                surfaceId = update.surfaceId,
+                catalogId = update.globalStyles?.let { "default" } // Could use catalogId from message
+            )
+        }
+
+        // Buffer components in adjacency list pattern
+        update.components.forEach { component ->
+            surface.componentBuffer[component.id] = component
+        }
+
+        // Apply global styles if present
+        update.globalStyles?.let { styles ->
+            // Apply font, primaryColor, backgroundColor etc.
+        }
+    }
+
+    private fun handleDataModelUpdate(update: A2UIMessage.DataModelUpdate) {
+        Log.d("A2UIRenderer", "Buffering dataModelUpdate for ${update.surfaceId}: ${update.path}")
+        
+        val surface = surfaces.getOrPut(update.surfaceId) {
+            SurfaceState(surfaceId = update.surfaceId)
+        }
+
+        // Update data model
+        val value = when {
+            update.literal != null -> parseJsonValue(update.literal)
+            update.value != null -> parseJsonValue(update.value)
+            else -> null
+        }
+        surface.dataModel[update.path] = value
+    }
+
+    private fun handleDeleteSurface(delete: A2UIMessage.DeleteSurface) {
+        Log.d("A2UIRenderer", "Deleting surface: ${delete.surfaceId}")
+        surfaces.remove(delete.surfaceId)
+        componentViews.clear()
+        viewBindings.clear()
+    }
+
+    /**
+     * STEP 4-7: Handle beginRendering signal
+     * - Build widget tree from root
+     * - Resolve data bindings
+     * - Render to container
+     */
+    fun handleBeginRendering(beginRendering: A2UIMessage.BeginRendering, container: ViewGroup) {
+        Log.d("A2UIRenderer", "beginRendering for ${beginRendering.surfaceId}, root: ${beginRendering.rootComponentId ?: "auto"}")
+        
+        val surface = surfaces[beginRendering.surfaceId]
+            ?: throw IllegalStateException("Surface ${beginRendering.surfaceId} not found")
+
+        // Clear previous views
+        container.removeAllViews()
+        componentViews.clear()
+        viewBindings.clear()
+
+        // Find root component
+        val rootComponentId = beginRendering.rootComponentId 
+            ?: surface.componentBuffer.keys.firstOrNull()
+            ?: throw IllegalStateException("No components buffered for surface")
+
+        val rootComponent = surface.componentBuffer[rootComponentId]
+            ?: throw IllegalStateException("Root component $rootComponentId not found")
+
+        // STEP 5: Build Widget Tree (lookup in registry via ComponentCatalog)
+        Log.d("A2UIRenderer", "STEP 5: Building widget tree from root: $rootComponentId")
+        val rootBinding = buildWidgetTree(rootComponent, surface, container)
+
+        // STEP 6: Resolve Data Bindings (separate pass)
+        Log.d("A2UIRenderer", "STEP 6: Resolving data bindings")
+        resolveDataBinding(rootBinding, surface)
+
+        // STEP 7: Render - add root view to container
+        container.addView(rootBinding.view)
+
+        Log.d("A2UIRenderer", "Rendering complete for surface ${beginRendering.surfaceId}")
+    }
+
+    /**
+     * STEP 5: Build Widget Tree
+     * Recursively create views and store binding metadata
+     */
     private fun buildWidgetTree(
         component: A2UIComponent,
-        componentMap: MutableMap<String, A2UIComponent>,
+        surface: SurfaceState,
         parent: ViewGroup
     ): ViewBinding {
-        // Build view using A2UIComponents (widget registry)
+        // Create view using ComponentCatalog (widget registry lookup)
         val binding = A2UIComponents.buildWidgetTree(component, parent, context)
         componentViews[component.id] = binding.view
-        componentBindings[component.id] = binding
+        viewBindings[binding.view] = binding
 
         // Handle children for container components
         when (component) {
             is A2UIComponent.Row -> {
-                handleContainerChildren(component, component.children, componentMap, binding.view as? ViewGroup ?: parent)
+                handleChildren(component.children, surface, binding.view as? ViewGroup ?: parent)
             }
             is A2UIComponent.Column -> {
-                handleContainerChildren(component, component.children, componentMap, binding.view as? ViewGroup ?: parent)
+                handleChildren(component.children, surface, binding.view as? ViewGroup ?: parent)
             }
             is A2UIComponent.A2UIList -> {
-                handleContainerChildren(component, component.children, componentMap, binding.view as? ViewGroup ?: parent)
+                handleChildren(component.children, surface, binding.view as? ViewGroup ?: parent)
             }
             is A2UIComponent.Card -> {
-                handleContainerChildren(component, component.children, componentMap, binding.view as? ViewGroup ?: parent)
-            }
-            is A2UIComponent.Overlay -> {
-                handleContainerChildren(component, component.children, componentMap, binding.view as? ViewGroup ?: parent)
+                handleChildren(component.children, surface, binding.view as? ViewGroup ?: parent)
             }
             is A2UIComponent.Button -> {
                 component.child?.let { childId ->
-                    componentMap[childId]?.let { childComponent ->
-                        val childBinding = buildWidgetTree(childComponent, componentMap, binding.view as? ViewGroup ?: parent)
-                        componentBindings[childId] = childBinding
-                        componentViews[childId] = childBinding.view
+                    surface.componentBuffer[childId]?.let { childComponent ->
+                        val childBinding = buildWidgetTree(childComponent, surface, binding.view as? ViewGroup ?: parent)
+                        if (binding.view is ViewGroup) {
+                            binding.view.addView(childBinding.view)
+                        }
+                    }
+                }
+            }
+            is A2UIComponent.Tabs -> {
+                // Create tab views
+                component.tabItems.forEachIndexed { index, tabItem ->
+                    val tabComponent = surface.componentBuffer[tabItem.child]
+                    tabComponent?.let { childComponent ->
+                        val childBinding = buildWidgetTree(childComponent, surface, binding.view as? ViewGroup ?: parent)
+                        if (binding.view is ViewGroup) {
+                            binding.view.addView(childBinding.view)
+                        }
                     }
                 }
             }
@@ -106,265 +206,240 @@ class A2UIRenderer(private val context: Context) {
         return binding
     }
 
-    private fun handleContainerChildren(
-        component: A2UIComponent,
-        children: ChildList,
-        componentMap: MutableMap<String, A2UIComponent>,
+    private fun handleChildren(
+        children: ChildrenList,
+        surface: SurfaceState,
         parentView: ViewGroup
     ) {
         val childIds = when (children) {
-            is ChildList.Static -> children.children
-            is ChildList.Template -> {
-                resolveTemplateChildren(children, componentMap, parentView)
+            is ChildrenList.ExplicitList -> children.children
+            is ChildrenList.Child -> listOf(children.childId)
+            is ChildrenList.ContentChild -> listOf(children.contentChildId)
+            is ChildrenList.Template -> {
+                // Dynamic list rendering
+                expandTemplate(children, surface, parentView)
             }
-            is ChildList.Empty -> emptyList()
         }
 
         childIds.forEach { childId ->
-            componentMap[childId]?.let { childComponent ->
-                val childBinding = buildWidgetTree(childComponent, componentMap, parentView)
-                componentBindings[childId] = childBinding
-                componentViews[childId] = childBinding.view
+            surface.componentBuffer[childId]?.let { childComponent ->
+                val childBinding = buildWidgetTree(childComponent, surface, parentView)
+                if (parentView is ViewGroup) {
+                    parentView.addView(childBinding.view)
+                }
             }
         }
     }
 
-    private fun resolveTemplateChildren(
-        template: ChildList.Template,
-        componentMap: MutableMap<String, A2UIComponent>,
-        parent: ViewGroup
+    private fun expandTemplate(
+        template: ChildrenList.Template,
+        surface: SurfaceState,
+        parentView: ViewGroup
     ): List<String> {
-        val resolver = A2UIComponents.dynamicValueResolver
-        if (resolver == null) {
-            Log.w("A2UIRenderer", "No dynamic value resolver available for template ${template.componentId}")
-            return emptyList()
-        }
-
-        val templateComponent = componentMap[template.componentId]
-        if (templateComponent == null) {
-            Log.w("A2UIRenderer", "Template component ${template.componentId} not found")
-            return emptyList()
-        }
-
-        val dataValue = resolver.getDataModel().getValue(template.path)
-        if (dataValue !is List<*>) {
-            Log.w("A2UIRenderer", "Data at path ${template.path} is not an array")
-            return emptyList()
-        }
-
-        val dataList = dataValue as List<Any?>
-        Log.d("A2UIRenderer", "Expanding template ${template.componentId} with ${dataList.size} items")
-
+        // Get data list from data model
+        val dataList = surface.dataModel[template.dataBinding] as? List<*> ?: return emptyList()
+        
         val childIds = mutableListOf<String>()
-
+        
         dataList.forEachIndexed { index, item ->
-            val childId = "${template.componentId}_${index}"
-            val childComponent = cloneComponentForTemplate(templateComponent, childId, template.path, index, item)
-            if (childComponent != null) {
-                componentMap[childId] = childComponent
-                childIds.add(childId)
+            val childId = "${template.componentId}_$index"
+            
+            // Clone template component with adjusted data binding
+            val templateComponent = surface.componentBuffer[template.componentId]
+            if (templateComponent != null) {
+                val clonedComponent = cloneComponentForTemplate(templateComponent, childId, template.dataBinding, index, item)
+                if (clonedComponent != null) {
+                    surface.componentBuffer[childId] = clonedComponent
+                    childIds.add(childId)
+                }
             }
         }
-
+        
         return childIds
     }
 
     private fun cloneComponentForTemplate(
         original: A2UIComponent,
         newId: String,
-        arrayPath: String,
+        dataPath: String,
         index: Int,
         item: Any?
     ): A2UIComponent? {
-        fun adjust(dv: DynamicValue): DynamicValue = adjustDynamicValueForTemplate(dv, arrayPath, index, item)
-
-        return when (original) {
-            is A2UIComponent.Text -> original.copy(id = newId, text = adjust(original.text))
-            is A2UIComponent.CheckBox -> original.copy(id = newId, label = adjust(original.label), value = adjust(original.value))
-            is A2UIComponent.ChoicePicker -> {
-                val adjustedOptions = original.options.map { option ->
-                    option.copy(label = adjust(option.label))
-                }
-                original.copy(id = newId, label = original.label?.let { adjust(it) }, value = adjust(original.value), options = adjustedOptions)
-            }
-            is A2UIComponent.TextField -> original.copy(id = newId, label = adjust(original.label), value = adjust(original.value))
-            is A2UIComponent.Image -> original.copy(id = newId, src = adjust(original.src), alt = original.alt?.let { adjust(it) })
-            is A2UIComponent.Icon -> original.copy(id = newId, color = original.color?.let { adjust(it) })
-            is A2UIComponent.Video -> original.copy(id = newId, src = adjust(original.src))
-            is A2UIComponent.ProgressBar -> original.copy(id = newId, value = adjust(original.value))
-            is A2UIComponent.Slider -> original.copy(id = newId, value = adjust(original.value), label = original.label?.let { adjust(it) })
-            is A2UIComponent.BalanceDisplay -> original.copy(id = newId, amount = adjust(original.amount), currency = adjust(original.currency))
-            is A2UIComponent.AccountCard -> original.copy(
-                id = newId,
-                accountName = adjust(original.accountName),
-                accountNumber = adjust(original.accountNumber),
-                balance = adjust(original.balance),
-                currency = adjust(original.currency)
-            )
-            is A2UIComponent.ActionButton -> original.copy(id = newId, label = adjust(original.label))
-            is A2UIComponent.QuickActionCircle -> original.copy(id = newId, label = adjust(original.label))
-            is A2UIComponent.Tab -> original.copy(id = newId, text = adjust(original.text))
-            is A2UIComponent.SegmentedTab -> original.copy(id = newId, text = adjust(original.text))
-            is A2UIComponent.ProductIcon -> original.copy(id = newId, label = adjust(original.label))
-            // Container components - clone children recursively
-            is A2UIComponent.Row -> {
-                val childList = original.children
-                val newChildren = when (childList) {
-                    is ChildList.Static -> {
-                        val newChildIds = childList.children.mapIndexed { i, id -> "${id}_clone_${index}" }
-                        ChildList.Static(newChildIds)
-                    }
-                    else -> childList
-                }
-                original.copy(id = newId, children = newChildren)
-            }
-            is A2UIComponent.Column -> {
-                val childList = original.children
-                val newChildren = when (childList) {
-                    is ChildList.Static -> {
-                        val newChildIds = childList.children.mapIndexed { i, id -> "${id}_clone_${index}" }
-                        ChildList.Static(newChildIds)
-                    }
-                    else -> childList
-                }
-                original.copy(id = newId, children = newChildren)
-            }
-            is A2UIComponent.Card -> {
-                val childList = original.children
-                val newChildren = when (childList) {
-                    is ChildList.Static -> {
-                        val newChildIds = childList.children.mapIndexed { i, id -> "${id}_clone_${index}" }
-                        ChildList.Static(newChildIds)
-                    }
-                    else -> childList
-                }
-                original.copy(id = newId, children = newChildren)
-            }
-            is A2UIComponent.A2UIList -> {
-                val childList = original.children
-                val newChildren = when (childList) {
-                    is ChildList.Static -> {
-                        val newChildIds = childList.children.mapIndexed { i, id -> "${id}_clone_${index}" }
-                        ChildList.Static(newChildIds)
-                    }
-                    else -> childList
-                }
-                original.copy(id = newId, children = newChildren)
-            }
-            is A2UIComponent.Button -> {
-                original.copy(id = newId, child = original.child?.let { "${it}_clone_${index}" })
-            }
-            is A2UIComponent.View -> original.copy(id = newId)
-            is A2UIComponent.Divider -> original.copy(id = newId)
-            is A2UIComponent.MenuItem,
-            is A2UIComponent.MenuSection,
-            is A2UIComponent.NavigationBar,
-            is A2UIComponent.AppBar,
-            is A2UIComponent.Overlay -> {
-                Log.w("A2UIRenderer", "Template cloning for ${original::class.simpleName} not yet implemented")
-                null
-            }
+        // Handle component cloning for templates
+        // Note: Data binding adjustment is currently disabled due to compiler type inference issue
+        return if (original is A2UIComponent.Text) {
+            original.copy(id = newId, text = original.text)
+        } else if (original is A2UIComponent.CheckBox) {
+            original.copy(id = newId, label = original.label, checked = original.checked, value = null)
+        } else if (original is A2UIComponent.TextField) {
+            original.copy(id = newId, label = original.label, text = original.text)
+        } else if (original is A2UIComponent.A2UIList) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Row) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Column) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Card) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Slider) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.ProgressBar) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Image) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Icon) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Video) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.AudioPlayer) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Divider) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Tabs) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Modal) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Button) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.DateTimeInput) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.MultipleChoice) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.ChoicePicker) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.BalanceDisplay) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.AccountCard) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.ActionButton) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.QuickActionCircle) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.NavigationBar) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.AppBar) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.ProductIcon) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.View) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Overlay) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.SegmentedTab) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.Tab) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.MenuItem) {
+            original.copy(id = newId)
+        } else if (original is A2UIComponent.MenuSection) {
+            original.copy(id = newId)
+        } else {
+            // Unknown component type
+            null
         }
     }
 
-    private fun adjustDynamicValueForTemplate(
-        dynamicValue: DynamicValue,
-        arrayPath: String,
-        index: Int,
-        item: Any?
-    ): DynamicValue {
-        return when (dynamicValue) {
-            is DynamicValue.DataBinding -> {
-                val originalPath = dynamicValue.path
-                when {
-                    originalPath == "@" -> {
-                        when (item) {
-                            is String -> DynamicValue.LiteralString(item)
-                            is Number -> DynamicValue.LiteralNumber(item)
-                            is Boolean -> DynamicValue.LiteralBoolean(item)
-                            else -> DynamicValue.LiteralString(item?.toString() ?: "")
-                        }
-                    }
-                    originalPath.startsWith("@.") -> {
-                        val property = originalPath.substring(2)
-                        val propValue = when (item) {
-                            is Map<*, *> -> item[property]
-                            else -> null
-                        }
-                        when (propValue) {
-                            is String -> DynamicValue.LiteralString(propValue)
-                            is Number -> DynamicValue.LiteralNumber(propValue)
-                            is Boolean -> DynamicValue.LiteralBoolean(propValue)
-                            else -> DynamicValue.LiteralString(propValue?.toString() ?: "")
-                        }
-                    }
-                    else -> {
-                        val newPath = if (originalPath.contains(".") || originalPath.startsWith("$")) {
-                            originalPath
-                        } else {
-                            "$arrayPath.$index.$originalPath"
-                        }
-                        DynamicValue.DataBinding(newPath)
+    /**
+     * STEP 6: Resolve Data Bindings
+     * Walk the view tree and resolve all bindings using the data model
+     * 
+     * Resolution Logic:
+     * - literal* only: Use literal value directly
+     * - path only: Resolve against data model
+     * - both: Update data model at path with literal, then bind
+     */
+    private fun resolveDataBinding(binding: ViewBinding, surface: SurfaceState) {
+        val resolver = A2UIComponents.dynamicValueResolver ?: return
+
+        // Resolve text binding
+        binding.textBinding?.let { dv ->
+            val value = resolveBoundValue(dv, surface)
+            (binding.view as? TextView)?.text = value?.toString() ?: ""
+        }
+
+        // Resolve label binding
+        binding.labelBinding?.let { dv ->
+            val value = resolveBoundValue(dv, surface)
+            when (binding.view) {
+                is CheckBox -> binding.view.text = value?.toString() ?: ""
+                is EditText -> binding.view.hint = value?.toString() ?: ""
+                is TextView -> binding.view.text = value?.toString() ?: ""
+            }
+        }
+
+        // Resolve value binding
+        binding.valueBinding?.let { dv ->
+            val value = resolveBoundValue(dv, surface)
+            when (binding.view) {
+                is CheckBox -> binding.view.isChecked = value as? Boolean ?: false
+                is SeekBar -> binding.view.progress = (value as? Number)?.toInt() ?: 0
+                is EditText -> binding.view.setText(value?.toString() ?: "")
+                is TextView -> binding.view.text = value?.toString() ?: ""
+            }
+        }
+
+        // Resolve checked binding
+        binding.checkedBinding?.let { dv ->
+            val value = resolveBoundValue(dv, surface)
+            (binding.view as? CheckBox)?.isChecked = value as? Boolean ?: false
+        }
+
+        // Resolve icon/src bindings
+        binding.iconId?.let { iconId ->
+            (binding.view as? ImageView)?.let { imageView ->
+                IconManager.getInstance()?.getIconResource(iconId.lowercase())?.let {
+                    imageView.setImageResource(it)
+                }
+            }
+        }
+
+        // Resolve color binding
+        binding.colorBinding?.let { dv ->
+            (binding.view as? ImageView)?.let { imageView ->
+                val color = resolveBoundValue(dv, surface)?.toString() ?: ""
+                if (color.isNotEmpty()) {
+                    try {
+                        imageView.setColorFilter(android.graphics.Color.parseColor(color))
+                    } catch (e: Exception) {
+                        // Invalid color format
                     }
                 }
             }
+        }
+
+        // Recursively resolve children
+        binding.children.forEach { child ->
+            resolveDataBinding(child, surface)
+        }
+    }
+
+    /**
+     * Resolve a DynamicValue following A2UI spec:
+     * - literal* only: Use literal value directly
+     * - path only: Resolve against data model
+     * - both: Update data model at path with literal, then bind to path
+     */
+    private fun resolveBoundValue(dv: DynamicValue, surface: SurfaceState): Any? {
+        return when (dv) {
             is DynamicValue.LiteralString,
             is DynamicValue.LiteralNumber,
-            is DynamicValue.LiteralBoolean,
-            is DynamicValue.LiteralArray,
-            is DynamicValue.FunctionCall -> dynamicValue
-        }
-    }
-
-    private fun buildComponentTree(
-        component: A2UIComponent,
-        componentMap: MutableMap<String, A2UIComponent>,
-        parentView: ViewGroup
-    ) {
-        val currentView = componentViews[component.id] ?: return
-        val currentBinding = componentBindings[component.id] ?: return
-
-        // Add child views to parent based on component type
-        when (component) {
-            is A2UIComponent.Row,
-            is A2UIComponent.Column,
-            is A2UIComponent.A2UIList,
-            is A2UIComponent.Card,
-            is A2UIComponent.Overlay -> {
-                val children = when (component) {
-                    is A2UIComponent.Row -> component.children
-                    is A2UIComponent.Column -> component.children
-                    is A2UIComponent.A2UIList -> component.children
-                    is A2UIComponent.Card -> component.children
-                    is A2UIComponent.Overlay -> component.children
-                    else -> ChildList.Empty
-                }
-
-                val childIds = when (children) {
-                    is ChildList.Static -> children.children
-                    is ChildList.Template -> resolveTemplateChildren(children, componentMap, currentView as? ViewGroup ?: parentView)
-                    is ChildList.Empty -> emptyList()
-                }
-
-                if (currentView is ViewGroup) {
-                    childIds.forEach { childId ->
-                        componentViews[childId]?.let { childView ->
-                            currentView.addView(childView)
-                        }
-                    }
+            is DynamicValue.LiteralBoolean -> {
+                // literal* only: Use directly
+                when (dv) {
+                    is DynamicValue.LiteralString -> dv.value
+                    is DynamicValue.LiteralNumber -> dv.value
+                    is DynamicValue.LiteralBoolean -> dv.value
+                    else -> null
                 }
             }
-            is A2UIComponent.Button -> {
-                component.child?.let { childId ->
-                    componentViews[childId]?.let { childView ->
-                        if (currentView is ViewGroup) {
-                            currentView.addView(childView)
-                        }
-                    }
-                }
+            is DynamicValue.LiteralArray -> dv.value.map { resolveBoundValue(it, surface) }
+            is DynamicValue.DataBinding -> {
+                // path only: Resolve against data model
+                surface.dataModel[dv.path]
             }
-            else -> {
-                // Leaf components don't have children
+            is DynamicValue.FunctionCall -> {
+                // Function calls (not fully implemented)
+                null
             }
         }
     }
@@ -373,12 +448,51 @@ class A2UIRenderer(private val context: Context) {
         return componentViews[componentId]
     }
 
-    fun handleNavigation(page: String) {
-        onNavigateListener?.invoke(page)
+    fun getSurface(surfaceId: String): SurfaceState? {
+        return surfaces[surfaceId]
+    }
+
+    fun handleUserAction(surfaceId: String, componentId: String, action: Action) {
+        val surface = surfaces[surfaceId] ?: return
+        
+        // Resolve action context bindings
+        val resolvedContext = when (action) {
+            is Action.Event -> action.context?.mapValues { resolveBoundValue(it.value, surface) }
+            else -> null
+        }
+
+        onActionListener?.invoke(action, resolvedContext ?: emptyMap())
     }
 
     fun clear() {
+        surfaces.clear()
         componentViews.clear()
-        componentBindings.clear()
+        viewBindings.clear()
+    }
+
+    private fun parseJsonValue(jsonElement: com.google.gson.JsonElement): Any? {
+        return when {
+            jsonElement.isJsonPrimitive -> {
+                val primitive = jsonElement.asJsonPrimitive
+                when {
+                    primitive.isString -> primitive.asString
+                    primitive.isNumber -> primitive.asNumber
+                    primitive.isBoolean -> primitive.asBoolean
+                    else -> null
+                }
+            }
+            jsonElement.isJsonArray -> {
+                jsonElement.asJsonArray.map { parseJsonValue(it) }
+            }
+            jsonElement.isJsonObject -> {
+                val obj = mutableMapOf<String, Any?>()
+                jsonElement.asJsonObject.entrySet().forEach { (key, value) ->
+                    obj[key] = parseJsonValue(value)
+                }
+                obj
+            }
+            jsonElement.isJsonNull -> null
+            else -> null
+        }
     }
 }
