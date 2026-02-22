@@ -24,8 +24,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Register A2UI components
-        A2UIComponents.registerDefaultComponents(this)
         // Set up dynamic value resolver with data model
         val dynamicValueResolver = DynamicValueResolver(dataModel)
         A2UIComponents.dynamicValueResolver = dynamicValueResolver

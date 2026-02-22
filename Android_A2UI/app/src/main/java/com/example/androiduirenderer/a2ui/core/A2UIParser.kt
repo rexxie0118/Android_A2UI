@@ -89,7 +89,7 @@ class A2UIParser(private val gson: Gson = Gson()) {
                 A2UIComponent.Text(id, accessibility, weight, text, variant)
             }
             "Button" -> {
-                val child = json.get("child").asString
+                val child = json.get("child")?.asString
                 val variant = json.get("variant")?.asString
                 val action = parseAction(json.getAsJsonObject("action"))
                 A2UIComponent.Button(id, accessibility, weight, child, variant, action)
@@ -195,7 +195,8 @@ class A2UIParser(private val gson: Gson = Gson()) {
                     path = obj.get("path").asString
                 )
             }
-            else -> throw JsonParseException("Invalid ChildList")
+            json.isJsonNull -> ChildList.Empty
+            else -> ChildList.Empty
         }
     }
     

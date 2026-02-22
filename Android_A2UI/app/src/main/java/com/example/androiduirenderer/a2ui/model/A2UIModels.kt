@@ -58,7 +58,7 @@ sealed class A2UIComponent {
         override val id: String,
         override val accessibility: AccessibilityAttributes? = null,
         override val weight: Float? = null,
-        @SerializedName("child") val child: String,
+        @SerializedName("child") val child: String? = null,
         @SerializedName("variant") val variant: String? = null,
         @SerializedName("action") val action: Action
     ) : A2UIComponent()
@@ -322,6 +322,7 @@ sealed class ChildList {
         @SerializedName("componentId") val componentId: String,
         @SerializedName("path") val path: String
     ) : ChildList()
+    object Empty : ChildList()
 }
 
 data class ChoiceOption(
